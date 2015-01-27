@@ -27,16 +27,15 @@ maximlikelihood(response, designmatrix, sampling.var)
 
 \arguments{
   \item{response}{
-a numeric vector. It represents the response or the observed value in the Fay Herriot
-Model
+A numeric vector. It represents the response or the direct survey based estimators in the Fay Herriot Model
 }
   \item{designmatrix}{
-a numeric matrix. The first column is a column of ones(also called the intercept). 
+A numeric matrix. The first column is a column of ones(also called the intercept). 
 The other columns consist of observations of each of the covariates or the explanatory 
 variable in Fay Herriot Model.
 }
   \item{sampling.var}{
-a numeric vector consisting of the known sampling variances of each of the small area levels.
+A numeric vector consisting of the known sampling variances of each of the small area levels.
 }
 }
 \details{

@@ -518,3 +518,49 @@ else stop( "The data does not have sufficient variables" )
   #return(t(covariate)%*%response)
 }
 
+
+
+# The function below implements the new method, i.e
+# estimating the psi and del by performing a linear 
+# regression when there is at least one covariate
+# The inputs are the vector of response, the designmatrix
+# including the intercept and the vector of sample sizes 
+# from each small area
+
+estimate.unknownsampvar <- function( response, mat.design, sample.size ){
+  projection=function(mat){
+    return(mat%*%solve(t(mat)%*%mat)%*%t(mat))
+  }
+  
+  data <- data.frame( cbind( response, mat.design ) )
+  fit <- lm( response ~ mat.design - 1, data = data )
+  resid <- as.vector( fit$residuals )
+  
+  artificial.response <- resid%o%resid
+  
+  artificial.response <- as.numeric( artificial.response )
+  
+  proj.ortho <- diag( length( resid ) )- projection( mat.design )
+  artificial.covariate1 <- as.numeric( proj.ortho )
+  
+  artificial.covariate2 <- proj.ortho%*%diag( 1/sample.size )%*%proj.ortho
+  artificial.covariate2 <- as.numeric( artificial.covariate2 )
+  
+  fit2estimate <- lm( artificial.response ~ artificial.covariate1 + artificial.covariate2 - 1 )
+  coeff <- fit2estimate$coefficients
+  psi <- as.numeric( coeff[1] )
+  del <- as.numeric( coeff[2] )
+  
+  psi <- max( psi, 0.0001 )
+  del <- max( del, 0.0001 )
+  
+  weights <- as.vector( 1/( psi + del*( 1/sample.size ) ) )
+  fit.beta <- lm( response ~ mat.design - 1, data = data, weights = weights )
+  beta.hat <- fit.beta$coefficients
+  B.hat <- del/( sample.size*psi + del )
+  theta.hat <- ( 1- B.hat )*response + B.hat*( mat.design%*%beta.hat )
+  return( list( psi.hat = psi, del.hat = del, beta.hat = as.vector( beta.hat ),
+                theta.hat = as.vector( theta.hat ), mat.design = as.matrix( mat.design ) ) )
+}
+
+
